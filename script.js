@@ -3,6 +3,9 @@
 
 const N8N_WEBHOOK_URL = 'https://n8n-6421999607235360.kloudbeansite.com/webhook/b6d3fc1a-b549-4b01-9b20-141903ac3e92';
 
+// CORS Proxy to handle cross-origin requests
+const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+
 document.addEventListener('DOMContentLoaded', () => {
   const fileInput = document.getElementById('fileInput');
   const fileName = document.getElementById('fileName');
@@ -57,10 +60,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
       console.log('Sending file to n8n webhook...', file.name);
 
-      const response = await fetch(N8N_WEBHOOK_URL, {
-        method: 'POST',
-        body: formData
-      });
+      // Try direct request first, then fallback to CORS proxy
+      let response;
+      try {
+        response = await fetch(N8N_WEBHOOK_URL, {
+          method: 'POST',
+          body: formData,
+          mode: 'cors'
+        });
+      } catch (corsError) {
+        console.warn('Direct fetch failed, trying CORS proxy...');
+        // If direct fails, use CORS proxy
+        const encodedURL = encodeURIComponent(N8N_WEBHOOK_URL);
+        response = await fetch(CORS_PROXY + encodedURL, {
+          method: 'POST',
+          body: formData
+        });
+      }
 
       if (!response.ok) {
         throw new Error(`HTTP Error: ${response.status}`);
