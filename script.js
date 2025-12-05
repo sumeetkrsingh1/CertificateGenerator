@@ -83,8 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
       progressSection.style.display = 'none';
       resultsSection.style.display = 'block';
 
-      if (data.status === 'success' || Array.isArray(data) || (data.length !== undefined)) {
-        // Process certificates
+if (data.status === 'success' || Array.isArray(data) || data.certificateHtml || (data.length !== undefined)) {        // Process certificates
         const certificates = Array.isArray(data) ? data : (data.certificates || []);
         allCertificates = certificates.length > 0 ? certificates : data.processedData ? Object.values(data.processedData) : [data];
         
