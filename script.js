@@ -2,9 +2,9 @@
 // Upload CSV/Excel and communicate with n8n workflow
 
 const N8N_WEBHOOK_URL = 'https://n8n-6421999607235360.kloudbeansite.com/webhook/b6d3fc1a-b549-4b01-9b20-141903ac3e92';
-
-// CORS Proxy to handle cross-origin requests
 const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+
+let allCertificates = []; // Store certificates for display
 
 document.addEventListener('DOMContentLoaded', () => {
   const fileInput = document.getElementById('fileInput');
@@ -16,11 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const successMessage = document.getElementById('successMessage');
   const errorMessage = document.getElementById('errorMessage');
 
-  // File input change handler
   fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type
       const validTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
       const isValidType = validTypes.some(type => file.type.startsWith(type.split('/')[0])) || file.name.endsWith('.csv') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
       
@@ -40,7 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Submit button handler
   submitBtn.addEventListener('click', async () => {
     const file = fileInput.files[0];
     if (!file) {
@@ -60,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       console.log('Sending file to n8n webhook...', file.name);
 
-      // Try direct request first, then fallback to CORS proxy
       let response;
       try {
         response = await fetch(N8N_WEBHOOK_URL, {
@@ -70,7 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       } catch (corsError) {
         console.warn('Direct fetch failed, trying CORS proxy...');
-        // If direct fails, use CORS proxy
         const encodedURL = encodeURIComponent(N8N_WEBHOOK_URL);
         response = await fetch(CORS_PROXY + encodedURL, {
           method: 'POST',
@@ -88,11 +83,26 @@ document.addEventListener('DOMContentLoaded', () => {
       progressSection.style.display = 'none';
       resultsSection.style.display = 'block';
 
-      if (data.status === 'success' || data.jobId || data.processedCount !== undefined) {
-        const processedCount = data.processedCount || 1;
-        successMessage.innerHTML = `<strong>Success!</strong> Certificates generated and processing initiated. Processed ${processedCount} participant(s).`;
+      if (data.status === 'success' || Array.isArray(data) || (data.length !== undefined)) {
+        // Process certificates
+        const certificates = Array.isArray(data) ? data : (data.certificates || []);
+        allCertificates = certificates.length > 0 ? certificates : data.processedData ? Object.values(data.processedData) : [data];
+        
+        if (allCertificates.length === 0) {
+          allCertificates = [data];
+        }
+
+        displayCertificates(allCertificates);
+        
+        const processedCount = allCertificates.length || 1;
+        successMessage.innerHTML = `<strong>Success!</strong> Certificates generated for ${processedCount} participant(s).`;
         successMessage.style.display = 'block';
         errorMessage.style.display = 'none';
+
+        // Update stats
+        document.getElementById('totalStudents').textContent = processedCount;
+        document.getElementById('certificatesGenerated').textContent = processedCount;
+        document.getElementById('emailsSent').textContent = processedCount;
       } else if (data.message) {
         throw new Error(data.message);
       } else {
@@ -110,7 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Reset button handler
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
       fileInput.value = '';
@@ -120,6 +129,74 @@ document.addEventListener('DOMContentLoaded', () => {
       successMessage.style.display = 'none';
       errorMessage.style.display = 'none';
       submitBtn.disabled = true;
+      allCertificates = [];
     });
+  }
+});
+
+function displayCertificates(certificates) {
+  const list = document.getElementById('certificatesList');
+  list.innerHTML = '';
+
+  certificates.forEach((cert, index) => {
+    const fullName = cert.fullName || cert['Full Name'] || 'Student ' + (index + 1);
+    const certItem = document.createElement('div');
+    certItem.className = 'certificate-item';
+    certItem.style.cssText = 'padding:15px;margin:10px 0;border:2px solid #667eea;border-radius:8px;background:#f9f9f9;display:flex;justify-content:space-between;align-items:center;';
+    
+    certItem.innerHTML = `
+      <div>
+        <h4 style="margin:0;color:#1a1a1a;">${fullName}</h4>
+        <p style="margin:5px 0 0 0;color:#666;font-size:14px;">Certificate of Completion</p>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="viewCertificate(${index})" class="btn btn-primary" style="padding:8px 16px;background:#667eea;color:white;border:none;border-radius:4px;cursor:pointer;">👀 View</button>
+        <button onclick="downloadCertificatePDF(${index})" class="btn btn-secondary" style="padding:8px 16px;background:#764ba2;color:white;border:none;border-radius:4px;cursor:pointer;">📥 Download</button>
+      </div>
+    `;
+    list.appendChild(certItem);
+  });
+}
+
+function viewCertificate(index) {
+  if (!allCertificates[index]) return;
+  
+  const cert = allCertificates[index];
+  const modal = document.getElementById('certificateModal');
+  const display = document.getElementById('certificateDisplay');
+  
+  display.innerHTML = cert.certificateHtml || `<p>No certificate HTML available</p>`;
+  modal.style.display = 'block';
+  window.currentCertificateIndex = index;
+}
+
+function closeCertificateModal() {
+  const modal = document.getElementById('certificateModal');
+  modal.style.display = 'none';
+}
+
+function downloadCertificatePDF(index) {
+  if (!allCertificates[index]) return;
+  
+  const cert = allCertificates[index];
+  const fullName = cert.fullName || 'Certificate';
+  const element = document.createElement('div');
+  element.innerHTML = cert.certificateHtml || '<p>No certificate available</p>';
+  
+  const opt = {
+    margin: 0,
+    filename: `Certificate_${fullName.replace(/\s+/g, '_')}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { orientation: 'landscape', unit: 'mm', format: 'a4' }
+  };
+  
+  html2pdf().set(opt).from(element).save();
+}
+
+window.addEventListener('click', (event) => {
+  const modal = document.getElementById('certificateModal');
+  if (event.target === modal) {
+    closeCertificateModal();
   }
 });
