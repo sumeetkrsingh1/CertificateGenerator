@@ -1,8 +1,7 @@
 // Certificate Generator - n8n Webhook Integration
 // Upload CSV/Excel and communicate with n8n workflow
 
-const N8N_WEBHOOK_URL = 'YOUR_N8N_WEBHOOK_URL_HERE';
-
+const N8N_WEBHOOK_URL = 'https://n8n-6421999960723536360.kloudbeansite.com/webhook/b6d3fc1a-b549-4b01-9b20-141903ac3e92';}
 document.addEventListener('DOMContentLoaded', () => {
   const fileInput = document.getElementById('fileInput');
   const fileName = document.getElementById('fileName');
