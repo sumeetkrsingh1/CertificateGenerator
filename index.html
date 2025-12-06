@@ -1,128 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Certificate Generator - Odoo Style</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
-  <div class="container">
     <!-- Navigation Bar -->
     <nav class="navbar">
-      <div class="nav-logo">🎓 Certificate Generator</div>
-      <div class="nav-links">
-        <a href="#">Home</a>
-        <a href="#">Certificates</a>
-        <a href="#">Settings</a>
-      </div>
+        <div class="navbar-container">
+            <div class="navbar-brand">📜 Certificate Generator</div>
+            <div class="navbar-links">
+                <a href="#" class="nav-link">Home</a>
+                <a href="#" class="nav-link">Certificates</a>
+                <a href="#" class="nav-link">Help</a>
+            </div>
+        </div>
     </nav>
 
-    <!-- Main Content -->
-    <div class="main-content">
-      <!-- Sidebar -->
-      <div class="sidebar">
-        <h3>📋 Instructions</h3>
-        <p><strong>Step 1:</strong> Upload CSV or Excel file</p>
-        <p><strong>Step 2:</strong> File must have columns: First Name, Middle Name, Last Name, Email, Certificate sent</p>
-        <p><strong>Step 3:</strong> Click "Generate & Send Certificates"</p>
-        <p><strong>Step 4:</strong> Certificates will be generated and displayed</p>
-        <p><strong>Step 5:</strong> Download or view certificates from the results</p>
-      </div>
-
-      <!-- Main Card -->
-      <div class="card">
-        <h2>🚀 Generate Certificates</h2>
-        <p>Upload a CSV/Excel file with participant data</p>
-
-        <!-- File Upload Section -->
-        <div class="41">
-          <label>📁 Select CSV or Excel File:</label>
-          <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display:none;">
-          <button type="button" onclick="document.getElementById('fileInput').click();" style="padding:10px 20px;background:#667eea;color:white;border:none;border-radius:4px;cursor:pointer;font-size:16px;width:100%;box-sizing:border-box;">📁 Choose CSV or Excel File</button>
-          <div id="fileName" class="file-name">No file selected</div>
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Header Section -->
+        <div class="header-section">
+            <h1>Generate Certificates</h1>
+            <p class="subtitle">Upload a CSV file to generate personalized certificates for your students</p>
         </div>
 
-        <!-- Template Info -->
-        <div class="template-info">
-          <h4>✅ Expected File Format:</h4>
-          <table class="template-table">
-            <tr>
-              <th>First Name</th>
-              <th>Middle Name</th>
-              <th>Last Name</th>
-              <th>Email</th>
-              <th>Certificate sent</th>
-            </tr>
-            <tr>
-              <td>John</td>
-              <td>Kumar</td>
-              <td>Doe</td>
-              <td>john@example.com</td>
-              <td>No</td>
-            </tr>
-            <tr>
-              <td>Jane</td>
-              <td>Singh</td>
-              <td>Smith</td>
-              <td>jane@example.com</td>
-              <td>No</td>
-            </tr>
-          </table>
-        </div>
+        <!-- Content Card -->
+        <div class="card">
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <label for="fileInput" class="upload-label">Select CSV or Excel File</label>
+                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display:none;">
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click();">📁 Choose File</button>
+                <div id="fileName" class="file-name">No file selected</div>
+            </div>
 
-        <!-- Generate Button -->
-        <button id="submitBtn" class="btn btn-primary" disabled>🚀 Generate & Send Certificates</button>
+            <!-- File Format Info -->
+            <div class="file-format-section">
+                <h3>Expected File Format</h3>
+                <table class="format-table">
+                    <thead>
+                        <tr>
+                            <th>First Name</th>
+                            <th>Middle Name</th>
+                            <th>Last Name</th>
+                            <th>Email</th>
+                            <th>Certificate sent</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>John</td>
+                            <td>Kumar</td>
+                            <td>Doe</td>
+                            <td>john@example.com</td>
+                            <td>No</td>
+                        </tr>
+                        <tr>
+                            <td>Jane</td>
+                            <td>Singh</td>
+                            <td>Smith</td>
+                            <td>jane@example.com</td>
+                            <td>No</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Action Button -->
+            <button id="submitBtn" class="btn btn-secondary" disabled>🚀 Generate & Send Certificates</button>
+        </div>
 
         <!-- Progress Section -->
-        <div id="progressSection" class="progress-section" style="display: none;">
-          <div class="spinner"></div>
-          <p>Processing your certificates...</p>
+        <div id="progressSection" class="card progress-card" style="display:none;">
+            <div class="spinner"></div>
+            <p>Processing your certificates...</p>
         </div>
 
         <!-- Results Section -->
-        <div id="resultsSection" class="card" style="display: none; margin-top: 20px;">
-          <div class="card-header">
-            <h3>📊 Results</h3>
-          </div>
-          <div class="card-body">
-            <div id="successMessage" class="alert alert-success" style="display: none;"></div>
-            <div id="errorMessage" class="alert alert-error" style="display: none;"></div>
-
-            <!-- Certificates List -->
-            <div id="certificatesList" class="certificates-list"></div>
-
-            <div class="result-stats">
-              <p><strong>Total Students:</strong> <span id="totalStudents">0</span></p>
-              <p><strong>Certificates Generated:</strong> <span id="certificatesGenerated">0</span></p>
-              <p><strong>Emails Sent:</strong> <span id="emailsSent">0</span></p>
+        <div id="resultsSection" class="card results-card" style="display:none;">
+            <div id="successMessage" class="message success-message" style="display:none;"></div>
+            <div id="errorMessage" class="message error-message" style="display:none;"></div>
+            
+            <div class="stats-container">
+                <div class="stat-box">
+                    <div class="stat-number" id="totalStudents">0</div>
+                    <div class="stat-label">Total Students</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="certificatesGenerated">0</div>
+                    <div class="stat-label">Certificates Generated</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="emailsSent">0</div>
+                    <div class="stat-label">Emails Sent</div>
+                </div>
             </div>
 
+            <h3>Generated Certificates</h3>
+            <div id="certificatesList" class="certificates-list"></div>
+            
             <button id="resetBtn" class="btn btn-secondary">🔄 Process Another File</button>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
 
-  <!-- Certificate Modal -->
-  <div id="certificateModal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Certificate Preview</h2>
-        <button class="modal-close" onclick="closeCertificateModal()">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div id="certificateDisplay" class="certificate-display"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-primary" onclick="downloadCertificatePDF()">📥 Download as PDF</button>
-        <button class="btn btn-secondary" onclick="closeCertificateModal()">Close</button>
-      </div>
+    <!-- Certificate Modal -->
+    <div id="certificateModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeCertificateModal()">&times;</span>
+            <div id="certificateDisplay"></div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="downloadCertificatePDF(window.currentCertificateIndex)">📥 Download as PDF</button>
+                <button class="btn btn-secondary" onclick="closeCertificateModal()">Close</button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
