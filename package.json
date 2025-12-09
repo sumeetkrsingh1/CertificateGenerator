@@ -1,0 +1,12 @@
+{
+  "name": "certificate-generator",
+  "version": "1.0.0",
+  "description": "Certificate generator with email sending",
+  "main": "send-emails.js",
+  "scripts": {
+    "start": "node send-emails.js"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.7"
+  }
+}
