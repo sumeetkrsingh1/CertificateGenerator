@@ -1,9 +1,7 @@
-// Certificate Generator - n8n Webhook Integration
-// Upload CSV/Excel and communicate with n8n workflow
-
+// Certificate Generator - Backend API Integration
+// Upload CSV/Excel and generate certificates, then send via Node.js API
 const N8N_WEBHOOK_URL = 'https://n8n-6421999607235360.kloudbeansite.com/webhook/b6d3fc1a-b549-4b01-9b20-141903ac3e92';
 const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
-const EMAIL_WEBHOOK_URL = 'https://n8n-6421999607235360.kloudbeansite.com/webhook/2e256044-8716-4105-ae45-1b9842e586aa'; // Certificate-Email-Sender webhook
 let allCertificates = []; // Store certificates for display
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -54,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-
       console.log('Sending file to n8n webhook...', file.name);
 
       let response;
@@ -83,7 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
       progressSection.style.display = 'none';
       resultsSection.style.display = 'block';
 
-if (data.status === 'success' || Array.isArray(data) || data.certificateHtml || (data.length !== undefined)) {        // Process certificates
+      if (data.status === 'success' || Array.isArray(data) || data.certificateHtml || (data.length !== undefined)) {
+        // Process certificates
         const certificates = Array.isArray(data) ? data : (data.certificates || []);
         allCertificates = certificates.length > 0 ? certificates : data.processedData ? Object.values(data.processedData) : [data];
         
@@ -101,7 +99,7 @@ if (data.status === 'success' || Array.isArray(data) || data.certificateHtml || 
         // Update stats
         document.getElementById('totalStudents').textContent = processedCount;
         document.getElementById('certificatesGenerated').textContent = processedCount;
-        document.getElementById('emailsSent').textContent = processedCount;
+        document.getElementById('emailsSent').textContent = '0'; // Reset email count
       } else if (data.message) {
         throw new Error(data.message);
       } else {
@@ -155,7 +153,8 @@ function displayCertificates(certificates) {
     `;
     list.appendChild(certItem);
   });
-    const sendEmailsBtn = document.getElementById('sendEmailsBtn');
+
+  const sendEmailsBtn = document.getElementById('sendEmailsBtn');
   if (sendEmailsBtn && certificates.length > 0) {
     sendEmailsBtn.style.display = 'block';
   }
@@ -179,6 +178,7 @@ function closeCertificateModal() {
   modal.classList.remove('active');
   document.body.style.overflow = 'auto';
 }
+
 function downloadCertificatePDF(index) {
   if (!allCertificates[index]) return;
   
@@ -203,6 +203,7 @@ window.addEventListener('click', (event) => {
   if (event.target === modal) {
     closeCertificateModal();
   }
+});
 
 // Email Sending Functions
 function setupSendEmailsButton() {
@@ -230,12 +231,21 @@ async function sendEmailsToAllStudents() {
       certificateDate: cert.certificateDate || new Date().toLocaleDateString()
     }));
 
-    console.log('Sending emails for', emailData.length, 'students');
+    console.log('Sending emails for', emailData.length, 'students via Node.js API');
 
-    const response = await fetch(EMAIL_WEBHOOK_URL, {
+    // Determine the API URL based on current domain
+    let apiUrl = '/api/send-emails';
+    
+    // If running on GitHub Pages, we need to use a full URL to the Vercel deployment
+    if (window.location.hostname.includes('github.io')) {
+      // For GitHub Pages, construct the Vercel URL from the repo name
+      apiUrl = 'https://certificate-generator-git-main-sumeetsprojects.vercel.app/api/send-emails';
+    }
+
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(emailData)
+      body: JSON.stringify({ certificates: emailData })
     });
 
     if (!response.ok) {
@@ -245,13 +255,20 @@ async function sendEmailsToAllStudents() {
     const result = await response.json();
     console.log('Email response:', result);
 
-    const emailsSentCount = emailData.length;
+    // Update stats based on API response
+    const emailsSentCount = result.successCount || emailData.length;
     document.getElementById('emailsSent').textContent = emailsSentCount;
 
     const successMessage = document.getElementById('successMessage');
     successMessage.innerHTML = `<strong>Success!</strong> ${emailsSentCount} email(s) sent successfully to all students.`;
     successMessage.style.display = 'block';
 
+    // Show error details if some emails failed
+    if (result.errorCount && result.errorCount > 0) {
+      const errorMessage = document.getElementById('errorMessage');
+      errorMessage.innerHTML = `<strong>Partial Failure:</strong> ${result.errorCount} email(s) failed to send. Please check the recipient email addresses.`;
+      errorMessage.style.display = 'block';
+    }
   } catch (error) {
     console.error('Error sending emails:', error);
     const errorMessage = document.getElementById('errorMessage');
@@ -259,7 +276,7 @@ async function sendEmailsToAllStudents() {
     errorMessage.style.display = 'block';
   } finally {
     sendEmailsBtn.disabled = false;
-    sendEmailsBtn.textContent = 'Send Emails to All Students';
+    sendEmailsBtn.textContent = '📧 Send Emails to All Students';
   }
 }
 
@@ -268,11 +285,12 @@ if (document.readyState === 'loading') {
 } else {
   setupSendEmailsButton();
 }
-})
 
 // Modal overlay click handler - close when clicking outside modal
-document.getElementById('certificateModal').addEventListener('click', (e) => {
-  if (e.target.id === 'certificateModal') {
-    closeCertificateModal();
-  }
-});;
+if (document.getElementById('certificateModal')) {
+  document.getElementById('certificateModal').addEventListener('click', (e) => {
+    if (e.target.id === 'certificateModal') {
+      closeCertificateModal();
+    }
+  });
+}
