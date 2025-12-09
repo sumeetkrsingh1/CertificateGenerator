@@ -3,8 +3,7 @@
 
 const N8N_WEBHOOK_URL = 'https://n8n-6421999607235360.kloudbeansite.com/webhook/b6d3fc1a-b549-4b01-9b20-141903ac3e92';
 const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
-const EMAIL_WEBHOOK_URL = 'https://n8n-6421999607235360.kloudbeansite.com/webhook/YOUR_EMAIL_WEBHOOK_ID'; // TODO: Update with actual email webhook ID
-
+const EMAIL_WEBHOOK_URL = 'https://n8n-6421999607235360.kloudbeansite.com/webhook/2e256044-8716-4105-ae45-1b9842e586aa'; // Certificate-Email-Sender webhook
 let allCertificates = []; // Store certificates for display
 
 document.addEventListener('DOMContentLoaded', () => {
