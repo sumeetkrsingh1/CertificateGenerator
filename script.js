@@ -155,6 +155,10 @@ function displayCertificates(certificates) {
     `;
     list.appendChild(certItem);
   });
+    const sendEmailsBtn = document.getElementById('sendEmailsBtn');
+  if (sendEmailsBtn && certificates.length > 0) {
+    sendEmailsBtn.style.display = 'block';
+  }
 }
 
 function viewCertificate(index) {
