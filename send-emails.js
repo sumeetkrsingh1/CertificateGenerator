@@ -77,4 +77,23 @@ async function sendEmails(certificatesData) {
   }
 }
 
+// VERCEL API HANDLER FOR /api/send-emails
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { certificates } = req.body;
+    const result = await sendEmails(certificates);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('API Error:', error);
+    return res.status(500).json({ 
+      success: false,
+      error: error.message || 'Email sending failed' 
+    });
+  }
+}
+
 module.exports = { sendEmails, transporter };
