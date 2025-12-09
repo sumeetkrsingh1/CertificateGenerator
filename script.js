@@ -164,16 +164,17 @@ function viewCertificate(index) {
   const modal = document.getElementById('certificateModal');
   const display = document.getElementById('certificateDisplay');
   
-  display.innerHTML = cert.certificateHtml || `<p>No certificate HTML available</p>`;
-  modal.style.display = 'block';
+  display.innerHTML = cert.certificateHtml || '<p>No certificate HTML available</p>';
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
   window.currentCertificateIndex = index;
 }
 
 function closeCertificateModal() {
   const modal = document.getElementById('certificateModal');
-  modal.style.display = 'none';
+  modal.classList.remove('active');
+  document.body.style.overflow = 'auto';
 }
-
 function downloadCertificatePDF(index) {
   if (!allCertificates[index]) return;
   
@@ -263,4 +264,11 @@ if (document.readyState === 'loading') {
 } else {
   setupSendEmailsButton();
 }
-});
+})
+
+// Modal overlay click handler - close when clicking outside modal
+document.getElementById('certificateModal').addEventListener('click', (e) => {
+  if (e.target.id === 'certificateModal') {
+    closeCertificateModal();
+  }
+});;
