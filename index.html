@@ -71,7 +71,7 @@
             </div>
 
             <!-- Action Button -->
-            <button id="submitBtn" class="btn btn-secondary" disabled>🚀 Generate & Send Certificates</button>
+            <button id="submitBtn" class="btn btn-secondary" disabled>🚀 Generate Certificates</button>
         </div>
 
         <!-- Progress Section -->
@@ -103,7 +103,12 @@
             <h3>Generated Certificates</h3>
             <div id="certificatesList" class="certificates-list"></div>
             
-            <button id="resetBtn" class="btn btn-secondary">🔄 Process Another File</button>
+    <!-- Send Emails Button -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+      <button id="sendEmailsBtn" class="btn btn-primary" style="flex: 1; display: none;">📧 Send Emails to All Students</button>
+      <button id="resetBtn" class="btn btn-secondary" style="flex: 1;">🔄 Process Another File</button>
+    </div>
+            
         </div>
     </div>
 
