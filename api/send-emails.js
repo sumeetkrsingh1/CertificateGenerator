@@ -1,12 +1,12 @@
 // Vercel API Handler for sending emails
 const nodemailer = require('nodemailer');
 
-// Gmail SMTP configuration
+// Gmail SMTP configuration with environment variables
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'sumitrajput8577@gmail.com',
-    pass: 'xkgm koeh bojy sotr' // Gmail App Password
+    user: process.env.GMAIL_USER || 'sumitrajput8577@gmail.com',
+    pass: process.env.GMAIL_PASS || 'xkgm koeh bojy sotr' // Gmail App Password
   }
 });
 
@@ -35,11 +35,11 @@ async function sendEmails(certificatesData) {
         }
 
         const mailOptions = {
-          from: 'sumitrajput8577@gmail.com',
+          from: process.env.GMAIL_USER || 'sumitrajput8577@gmail.com',
           to: cert.email,
           subject: `Your Certificate - ${cert.fullName}`,
           html: cert.certificateHtml || '',
-          replyTo: 'sumitrajput8577@gmail.com'
+          replyTo: process.env.GMAIL_USER || 'sumitrajput8577@gmail.com'
         };
 
         const info = await transporter.sendMail(mailOptions);
@@ -96,7 +96,6 @@ export default async function handler(req, res) {
 
   try {
     const { certificates } = req.body;
-
     if (!certificates) {
       return res.status(400).json({ error: 'No certificates provided' });
     }
