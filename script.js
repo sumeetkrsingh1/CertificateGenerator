@@ -3,6 +3,7 @@
 
 const N8N_WEBHOOK_URL = 'https://n8n-6421999607235360.kloudbeansite.com/webhook/b6d3fc1a-b549-4b01-9b20-141903ac3e92';
 const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+const EMAIL_WEBHOOK_URL = 'https://n8n-6421999607235360.kloudbeansite.com/webhook/YOUR_EMAIL_WEBHOOK_ID'; // TODO: Update with actual email webhook ID
 
 let allCertificates = []; // Store certificates for display
 
@@ -198,4 +199,69 @@ window.addEventListener('click', (event) => {
   if (event.target === modal) {
     closeCertificateModal();
   }
+
+// Email Sending Functions
+function setupSendEmailsButton() {
+  const sendEmailsBtn = document.getElementById('sendEmailsBtn');
+  if (sendEmailsBtn) {
+    sendEmailsBtn.addEventListener('click', sendEmailsToAllStudents);
+  }
+}
+
+async function sendEmailsToAllStudents() {
+  if (allCertificates.length === 0) {
+    alert('No certificates to send. Please generate certificates first.');
+    return;
+  }
+
+  const sendEmailsBtn = document.getElementById('sendEmailsBtn');
+  sendEmailsBtn.disabled = true;
+  sendEmailsBtn.textContent = 'Sending emails...';
+
+  try {
+    const emailData = allCertificates.map(cert => ({
+      fullName: cert.fullName || 'Student',
+      email: cert.email || '',
+      certificateHtml: cert.certificateHtml || '',
+      certificateDate: cert.certificateDate || new Date().toLocaleDateString()
+    }));
+
+    console.log('Sending emails for', emailData.length, 'students');
+
+    const response = await fetch(EMAIL_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(emailData)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP Error: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log('Email response:', result);
+
+    const emailsSentCount = emailData.length;
+    document.getElementById('emailsSent').textContent = emailsSentCount;
+
+    const successMessage = document.getElementById('successMessage');
+    successMessage.innerHTML = `<strong>Success!</strong> ${emailsSentCount} email(s) sent successfully to all students.`;
+    successMessage.style.display = 'block';
+
+  } catch (error) {
+    console.error('Error sending emails:', error);
+    const errorMessage = document.getElementById('errorMessage');
+    errorMessage.innerHTML = `<strong>Error sending emails!</strong> ${error.message}`;
+    errorMessage.style.display = 'block';
+  } finally {
+    sendEmailsBtn.disabled = false;
+    sendEmailsBtn.textContent = 'Send Emails to All Students';
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupSendEmailsButton);
+} else {
+  setupSendEmailsButton();
+}
 });
